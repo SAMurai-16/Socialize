@@ -1,3 +1,10 @@
+![Python](https://img.shields.io/badge/python-3.10-blue.svg)
+![Django](https://img.shields.io/badge/django-4.2-green.svg)
+![Celery](https://img.shields.io/badge/celery-enabled-lightgreen.svg)
+![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
+
+
+
 # 🌐 Socialize
 
 **Socialize** is a platform that allows you to manage and schedule posts across multiple social media accounts — all from one unified dashboard. Currently supports **Reddit** and **Telegram**.
