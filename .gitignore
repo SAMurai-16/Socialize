@@ -1,0 +1,24 @@
+# Ignore virtual environment
+.venv/
+
+# Ignore Docker config
+docker-compose.yml
+
+# Ignore pycache and Python compiled files
+__pycache__/
+*.py[cod]
+
+# Ignore Django migrations and DBs
+*.sqlite3
+*/migrations/
+*.log
+
+# Ignore VSCode/editor files
+.vscode/
+*.swp
+
+# (Optional) Ignore env/local config
+.env
+
+# Ignore all .gitignores inside subfolders (to prevent nesting confusion)
+socialize/.gitignore
