@@ -2,7 +2,7 @@ from django.shortcuts import render
 from .forms import UserRegistrationForm
 from django.http import HttpResponse
 from django.contrib.auth import login
-
+from .utils.cloudinary import upload_image_to_cloudinary
 from django_celery_beat.models import PeriodicTask, CrontabSchedule, ClockedSchedule, IntervalSchedule
 from django.shortcuts import get_object_or_404,redirect
 import json
@@ -111,6 +111,17 @@ def reddit_create(request):
             reddit = form.save(commit=False)
             reddit.user = request.user
             reddit.status = "Pending" if action == "schedule" else "Not Scheduled"
+
+
+            image_file = request.FILES.get('photo')
+            if image_file:
+                try:
+                    result  = upload_image_to_cloudinary(image_file)
+                    reddit.photo_url = result
+                except Exception as e:
+                    print("❌ Cloudinary upload failed:", e)
+
+
             reddit.save()
 
             if action =="schedule":
@@ -127,7 +138,7 @@ def reddit_create(request):
                     clocked=clocked_schedule,
                     name=task_name,
                     task='Main.tasks.post_for_user',
-                    args=json.dumps([reddit.user.id, reddit.subreddit_name,reddit.title,reddit.body,reddit.id]),
+                    args=json.dumps([reddit.user.id, reddit.subreddit_name,reddit.title,reddit.body,reddit.photo_url,reddit.id]),
                     one_off=True,
                     enabled=True
                 )

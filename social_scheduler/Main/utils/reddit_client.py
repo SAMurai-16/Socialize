@@ -63,6 +63,7 @@ def schedule_post_to_reddit(access_token, subreddit, title, kind="self", text=No
         "api_type": "json"
     }
 
+    # Add content depending on the type of post
     if kind == "self" and text:
         data["text"] = text
     elif kind == "link" and url:
@@ -72,6 +73,7 @@ def schedule_post_to_reddit(access_token, subreddit, title, kind="self", text=No
 
     print("Status:", response.status_code)
     print("Text:", response.text)
+    
     try:
         return response.json()
     except ValueError:

@@ -31,7 +31,7 @@ class TelegramForm(forms.ModelForm):
 class RedditForm(forms.ModelForm):
     class Meta:
         model = Reddit
-        fields= ('subreddit_name','title','body','scheduled_time')
+        fields= ('subreddit_name','title','body','photo','scheduled_time')
         widgets = {
             'scheduled_time': forms.DateTimeInput(attrs={
                 'type': 'datetime-local',

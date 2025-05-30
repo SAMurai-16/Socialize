@@ -37,7 +37,9 @@ class Reddit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     subreddit_name = models.CharField(max_length=20)
     title= models.TextField()
-    body = models.TextField()
+    body = models.TextField(blank=True , null=True)
+    photo  = models.ImageField(upload_to='reddit_photos/', blank=True, null=True)
+    photo_url = models.URLField(blank=True, null=True)
     scheduled_time = models.DateTimeField()
     status = models.CharField(default="Pending", max_length=20)
 

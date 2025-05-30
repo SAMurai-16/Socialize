@@ -60,7 +60,7 @@ def send_telegram_message(BOT_id,chat_id, message, image_path_or_url=None, tele_
         except requests.exceptions.RequestException as e:
             logger.error(f"Failed to send message to chat_id={chat_id}: {e}")
 
-    # ✅ Update Telegram status if successful and tele_id is valid
+    
     if success and tele_id:
         try:
             with transaction.atomic():
@@ -183,15 +183,24 @@ def send_photo_from_url():
 
 
 @shared_task
-def post_for_user(user, subreddit, title, content, reddit_id=None):
+def post_for_user(user, subreddit, title, content,image_url, reddit_id=None):
     success = False
     try:
 
         reddit_account = RedditAccount.objects.get(user=user)
         
         access_token = get_access_token(reddit_account.refresh_token)
+
+        if image_url:
+             result = schedule_post_to_reddit(access_token, subreddit, title, kind="link", url = image_url)
+             
+        else:
+            result = schedule_post_to_reddit(access_token, subreddit, title, kind="self", text=content)
+            
+
+
         
-        result = schedule_post_to_reddit(access_token, subreddit, title, kind="self", text=content)
+       
         success = True
     except Exception as e:
         print(f"Reddit Post Failed: {e}")
