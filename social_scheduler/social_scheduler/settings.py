@@ -38,6 +38,11 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://socialize-production-2b22.up.railway.app",  # your deployed domain
+]
+
+
 # Application definition
 
 INSTALLED_APPS = [
