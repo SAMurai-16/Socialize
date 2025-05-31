@@ -104,6 +104,9 @@ WSGI_APPLICATION = "social_scheduler.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+import dj_database_url
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
