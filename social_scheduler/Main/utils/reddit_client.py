@@ -23,7 +23,7 @@ client_secret = settings.REDDIT_CLIENT_SECRET
 
 
 CLIENT_ID = client_id
-REDIRECT_URI = https://socialize-xjdy.onrender.com/schedule/reddit/callback/"
+REDIRECT_URI = "https://socialize-xjdy.onrender.com/schedule/reddit/callback/"
 CLIENT_SECRET = client_secret
 SCOPES = "identity submit read"
 STATE = "random_secure_token"
