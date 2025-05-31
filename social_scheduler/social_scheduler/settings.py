@@ -104,11 +104,15 @@ WSGI_APPLICATION = "social_scheduler.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-import dj_database_url
-from decouple import config
-
 DATABASES = {
-    'default': dj_database_url.parse(config('DATABASE_URL'), conn_max_age=600)
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'social_scheduler_db',
+        'USER': 'scheduler_user',
+        'PASSWORD': 'supersecret',
+        'HOST': 'localhost',  # matches the service name in docker-compose
+        'PORT': '5432',
+    }
 }
 
 
