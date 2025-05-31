@@ -179,13 +179,13 @@ LOGOUT_REDIRECT_URL = '/schedule/'
 # CELERY SETUP
 
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Kolkata'
+accept_content = ['application/json']
+task_serializer = 'json'
+result_serializer = 'json'
+timezone = 'Asia/Kolkata'
 
 
-CELERY_RESULT_BACKEND = 'django-db'
+result_backend = 'django-db'
 
 
 # CELERY BEAT SETTINGS
