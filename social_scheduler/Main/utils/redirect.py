@@ -14,7 +14,7 @@ client_secret = settings.REDDIT_CLIENT_SECRET
 
 
 CLIENT_ID = client_id
-REDIRECT_URI = "http://127.0.0.1:8000/schedule/reddit/callback/"
+REDIRECT_URI = settings.REDDIT_REDIRECT_URI
 CLIENT_SECRET = client_secret
 SCOPES = "identity submit read"
 STATE = "random_secure_token"
@@ -24,6 +24,7 @@ STATE = "random_secure_token"
 
 
 def reddit_auth_start(request):
+    print(REDIRECT_URI)
     url = (
         f"https://www.reddit.com/api/v1/authorize?"
         f"client_id={CLIENT_ID}&response_type=code&state={STATE}"

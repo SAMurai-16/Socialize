@@ -33,7 +33,7 @@ SECRET_KEY = "django-insecure-ku14!+x(-@&i^-rfg_1vbimbm*lmiqr^u19rq(jx3)&+f*=gpx
 
 # SECURITY WARNING: don't run with debug turned on in production!
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", cast=bool, default=False)
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -176,7 +176,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-LOGIN_URL = '/accounts/login'
+LOGIN_URL = '/schedule/login'
 
 LOGIN_REDIRECT_URL = '/schedule/'
 
@@ -185,14 +185,14 @@ LOGOUT_REDIRECT_URL = '/schedule/'
 
 # CELERY SETUP
 
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
+accept_content = ['application/json']
+task_serializer = 'json'
+result_serializer = 'json'
+timezone = 'Asia/Kolkata'
 
 
-CELERY_RESULT_BACKEND = 'django-db'
+result_backend = 'django-db'
 
 
 # CELERY BEAT SETTINGS

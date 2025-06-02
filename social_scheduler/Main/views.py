@@ -1,18 +1,19 @@
 from django.shortcuts import render
 from .forms import UserRegistrationForm
 from django.http import HttpResponse
-from django.contrib.auth import login
+from django.contrib.auth import login,authenticate
 from .utils.cloudinary import upload_image_to_cloudinary
 from django_celery_beat.models import PeriodicTask, CrontabSchedule, ClockedSchedule, IntervalSchedule
 from django.shortcuts import get_object_or_404,redirect
 import json
 from .models import Telegram,Reddit,RedditAccount
-from .forms import TelegramForm,RedditForm
+from .forms import TelegramForm,RedditForm,CustomLoginForm
 from django.shortcuts import redirect
 from django.utils import timezone   
 from Main.tasks import send_photo_from_url
 import urllib.parse
 import requests
+import os
 
 from django.contrib.auth.decorators import login_required
 # Create your views here.
@@ -22,7 +23,28 @@ def index(request):
     return render(request,"index.html")
 
 
+def login_view(request):
+    if request.method == "POST":
+        form = CustomLoginForm(request.POST,request.FILES)
+        if form.is_valid():
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
+            user  = authenticate(request,username=username,password=password)
+            if user is not None:
+                login(request,user)
+                return redirect('index')
+            else: 
+                form.add_error(None, 'Invalid username or password')
+        
+        
+
+    else:
+        form = CustomLoginForm()
+    return render(request, 'login.html', {'form': form})
+
+
 def register(request):
+ try:
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
@@ -30,16 +52,17 @@ def register(request):
             user.set_password(form.cleaned_data['password1'])
             user.save()
             login(request,user)
-            
-
-
-     
+            return redirect("index")
+             
 
     else:
         form = UserRegistrationForm()
 
     return render(request,'auth/register.html',{'form':form }
     )
+ except Exception as e:
+     print(f"Registration Failed : {e}")
+     return HttpResponse("Something went Wrong")
 
 
 
@@ -60,9 +83,18 @@ def telegram_create(request):
             tele = form.save(commit=False)
             tele.user = user
             tele.status = "Pending" if action == "schedule" else "Not Scheduled"
+
+            image_file = request.FILES.get("photo")
+            if image_file:
+                image_url = upload_image_to_cloudinary(image_file)
+                tele.photo = None
+                tele.image_url = image_url
+
+
             tele.save()
 
-            image_url = request.build_absolute_uri(tele.photo.url) if tele.photo else None
+    
+
 
             if action == "schedule":
                 clocked_time = tele.scheduled_time
@@ -117,12 +149,18 @@ def reddit_create(request):
             if image_file:
                 try:
                     result  = upload_image_to_cloudinary(image_file)
+                    reddit.photo=None
                     reddit.photo_url = result
+
+                    
                 except Exception as e:
                     print("❌ Cloudinary upload failed:", e)
 
+                    
+
 
             reddit.save()
+            
 
             if action =="schedule":
                 clocked_time = reddit.scheduled_time
@@ -224,7 +262,28 @@ def telegram_edit(request, telegram_id):
         if form.is_valid():
             tele = form.save(commit=False)
             tele.user = request.user
+
             tele.save()
+            
+
+
+            task_name_prefix = f"schedule_telegram_task_"
+            tasks = PeriodicTask.objects.filter(name__startswith=task_name_prefix)
+
+
+            for task in tasks:
+                args = json.loads(task.args)
+                if tele.id in args:
+                    # Update the existing task's args and clocked time
+                    task.args = json.dumps([tele.BOT_id, tele.chat_id, tele.content,tele.image_url, tele.id])
+
+                    # Update clocked schedule if time was changed
+                    clocked_time = tele.scheduled_time
+                    clocked_schedule, created = ClockedSchedule.objects.get_or_create(clocked_time=clocked_time)
+                    task.clocked = clocked_schedule
+
+                    task.save()
+
             return redirect('user')
 
     else:
@@ -267,7 +326,7 @@ def reddit_edit(request, reddit_id):
                 args = json.loads(task.args)
                 if reddit.id in args:
                     # Update the existing task's args and clocked time
-                    task.args = json.dumps([reddit.user.id, reddit.subreddit_name, reddit.title, reddit.body, reddit.id])
+                    task.args = json.dumps([reddit.user.id, reddit.subreddit_name, reddit.title, reddit.body,reddit.photo_url, reddit.id])
 
                     # Update clocked schedule if time was changed
                     clocked_time = reddit.scheduled_time

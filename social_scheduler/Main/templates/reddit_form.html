@@ -41,7 +41,17 @@
                         {% for field in form %}
                             <div class="mb-3">
                                 <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+
+                                {% if form.instance.pk and field.name == 'photo' %}
+                                                               {{ field|add_class:"form-control bg-dark text-white border-secondary form-control-sm"|attr:"disabled" }}
+                                                               <div class="text-danger small">Cannot be changed</div>
+                                                                
+
+                                {% else %}
                                 {{ field|add_class:"form-control bg-dark text-white border-secondary form-control-sm" }}
+
+                                {% endif %}
+
                                 {% if field.errors %}
                                     <div class="text-danger small">{{ field.errors }}</div>
                                 {% endif %}
@@ -72,10 +82,21 @@
                     </div>
         
                     <!-- Title -->
-                    <h5 class="fw-bold">{{ form.title.value|default:"last try" }}</h5>
+                    <h5 class="fw-bold">{{ form.title.value|default:"Socialize" }}</h5>
         
                     <!-- Content -->
-                    <p class="mb-4">{{ form.body.value|default:"last" }}</p>
+                     {% if reddit_entry.photo_url  %}
+                     <p class= " my-3 py-3 text-center"> 
+                       <img src="{{reddit_entry.photo_url}}" style="max-height: 280px;"class="img-fluid" alt=""> 
+
+
+                     </p>
+
+                     {%else%}
+                                         <p class="mb-4">{{ form.body.value|default:"Welecome to Socialize" }}</p>
+
+                     {% endif %}
+
         
                     <!-- Action buttons (fake icons/text) -->
                     <div class="d-flex gap-3">

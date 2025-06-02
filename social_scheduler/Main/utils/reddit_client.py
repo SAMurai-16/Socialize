@@ -23,7 +23,7 @@ client_secret = settings.REDDIT_CLIENT_SECRET
 
 
 CLIENT_ID = client_id
-REDIRECT_URI = "http://127.0.0.1:8000/schedule/reddit/callback/"
+REDIRECT_URI = settings.REDDIT_REDIRECT_URI
 CLIENT_SECRET = client_secret
 SCOPES = "identity submit read"
 STATE = "random_secure_token"

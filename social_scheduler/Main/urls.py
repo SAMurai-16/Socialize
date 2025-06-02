@@ -9,6 +9,8 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("register/", views.register, name="register"),
     path('test',views.test_env,name="test"),
+    path('login',views.login_view,name="login_view"),
+
 
     path("telegram",views.schedule_telegram, name="telegram"),
     # path("reddit",views.trigger_reddit_post, name="reddit"),
