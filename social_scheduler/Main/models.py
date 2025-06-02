@@ -29,6 +29,7 @@ class Telegram(models.Model):
     content= models.TextField()
     scheduled_time = models.DateTimeField()
     photo  = models.ImageField(upload_to='photos/', blank=True, null=True)
+    image_url = models.URLField(blank=True , null=True)
     status = models.CharField(default="Pending", max_length=20)
   
 
