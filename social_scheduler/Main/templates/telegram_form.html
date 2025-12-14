@@ -40,7 +40,10 @@
                         <div class="d-grid gap-2">
                             <button type="submit" name="action" value="schedule" class="btn 
                             bg-primary btn-lg">Schedule</button>
-        <button type="submit" name="action" value="preview" class="btn btn-outline-light btn-lg">Preview</button>
+                            <button type="submit" name="action" value="preview" class="btn btn-outline-light btn-lg">Preview</button>
+                            <a href="{% url 'generate_content' %}" class="btn btn-success btn-lg">
+                                <i class="bi bi-stars"></i> Generate with AI
+                            </a>
                         </div>
                     </form>
                 </div>

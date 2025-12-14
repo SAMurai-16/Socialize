@@ -19,6 +19,7 @@ REDDIT_CLIENT_SECRET = config("REDDIT_CLIENT_SECRET")
 REDDIT_REDIRECT_URI = config("REDDIT_REDIRECT_URI")
 REDDIT_SCOPES = config("REDDIT_SCOPES")
 REDDIT_STATE = config("REDDIT_STATE")
+GEMINI_API_KEY = config("GEMINI_API_KEY")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -36,6 +37,12 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
+        
+# CSRF settings for local development
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 
 # Application definition

@@ -54,3 +54,39 @@ class RedditAccount(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class ContentTemplate(models.Model):
+    CONTENT_TYPE_CHOICES = [
+        ('article', 'Article'),
+        ('social_post', 'Social Post'),
+        ('email', 'Email'),
+        ('product_description', 'Product Description'),
+        ('blog', 'Blog Post'),
+        ('other', 'Other')
+    ]
+    
+    TONE_CHOICES = [
+        ('professional', 'Professional'),
+        ('casual', 'Casual'),
+        ('persuasive', 'Persuasive'),
+        ('informative', 'Informative'),
+        ('humorous', 'Humorous'),
+        ('formal', 'Formal'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content_type = models.CharField(max_length=50, choices=CONTENT_TYPE_CHOICES)
+    topic = models.TextField()
+    audience = models.TextField()
+    tone = models.CharField(max_length=50, choices=TONE_CHOICES)
+    style = models.TextField(blank=True, null=True)
+    keywords = models.TextField(blank=True, null=True, help_text="Comma-separated keywords")
+    length = models.CharField(max_length=100, help_text="e.g., 500 words, 280 characters")
+    format = models.TextField(blank=True, null=True, help_text="e.g., bullet points, headings, Q&A")
+    objective = models.TextField(help_text="What should this content achieve?")
+    generated_content = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.content_type} - {self.topic[:30]}"
+
+
