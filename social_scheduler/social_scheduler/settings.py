@@ -45,6 +45,11 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://socialize-production-2b22.up.railway.app",  # your deployed domain
+]
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -115,14 +120,7 @@ import dj_database_url
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'social_scheduler_db',
-        'USER': 'scheduler_user',
-        'PASSWORD': 'supersecret',
-        'HOST': 'localhost',  # matches the service name in docker-compose
-        'PORT': '5432',
-    }
+    'default': dj_database_url.parse(config('DATABASE_URL'), conn_max_age=600)
 }
 
 
