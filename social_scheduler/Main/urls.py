@@ -9,6 +9,8 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("register/", views.register, name="register"),
     path('test',views.test_env,name="test"),
+    path('login',views.login_view,name="login_view"),
+
 
     path("telegram",views.schedule_telegram, name="telegram"),
     # path("reddit",views.trigger_reddit_post, name="reddit"),
@@ -24,6 +26,8 @@ urlpatterns = [
      path('<int:reddit_id>/reddit/view',views.reddit_view, name='reddit_view'),
       path('reddit/connect/', redirect.reddit_auth_start, name='reddit_auth_start'),
       path('reddit/callback/', redirect.reddit_callback, name='reddit_callback'),  
+      path('generate-content/', views.generate_content, name='generate_content'),
+  
 
 
 

@@ -1,18 +1,21 @@
 from django.shortcuts import render
-from .forms import UserRegistrationForm
-from django.http import HttpResponse
-from django.contrib.auth import login
+from .forms import UserRegistrationForm, ContentTemplateForm
+from django.http import HttpResponse, JsonResponse
+from django.contrib.auth import login,authenticate
 from .utils.cloudinary import upload_image_to_cloudinary
 from django_celery_beat.models import PeriodicTask, CrontabSchedule, ClockedSchedule, IntervalSchedule
 from django.shortcuts import get_object_or_404,redirect
 import json
-from .models import Telegram,Reddit,RedditAccount
-from .forms import TelegramForm,RedditForm
+from .models import Telegram, Reddit, RedditAccount, ContentTemplate
+from .forms import TelegramForm,RedditForm,CustomLoginForm
 from django.shortcuts import redirect
 from django.utils import timezone   
 from Main.tasks import send_photo_from_url
 import urllib.parse
 import requests
+import os
+from django.views.decorators.csrf import csrf_exempt
+import time
 
 from django.contrib.auth.decorators import login_required
 # Create your views here.
@@ -22,24 +25,43 @@ def index(request):
     return render(request,"index.html")
 
 
-def register(request):
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+def login_view(request):
+    if request.method == "POST":
+        form = CustomLoginForm(request.POST,request.FILES)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password1'])
-            user.save()
-            login(request,user)
-            
-
-
-     
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
+            user  = authenticate(request,username=username,password=password)
+            if user is not None:
+                login(request,user)
+                return redirect('index')
+            else: 
+                form.add_error(None, 'Invalid username or password')
+        
+        
 
     else:
-        form = UserRegistrationForm()
+        form = CustomLoginForm()
+    return render(request, 'login.html', {'form': form})
 
-    return render(request,'auth/register.html',{'form':form }
-    )
+
+def register(request):
+    try:
+        if request.method == 'POST':
+            form = UserRegistrationForm(request.POST)
+            if form.is_valid():
+                user = form.save(commit=False)
+                user.set_password(form.cleaned_data['password1'])
+                user.save()
+                login(request, user)
+                return redirect("index")
+        else:
+            form = UserRegistrationForm()
+
+        return render(request, 'auth/register.html', {'form': form})
+    except Exception as e:
+        print(f"Registration Failed : {e}")
+        return HttpResponse("Something went Wrong")
 
 
 
@@ -60,9 +82,18 @@ def telegram_create(request):
             tele = form.save(commit=False)
             tele.user = user
             tele.status = "Pending" if action == "schedule" else "Not Scheduled"
+
+            image_file = request.FILES.get("photo")
+            if image_file:
+                image_url = upload_image_to_cloudinary(image_file)
+                tele.photo = None
+                tele.image_url = image_url
+
+
             tele.save()
 
-            image_url = request.build_absolute_uri(tele.photo.url) if tele.photo else None
+    
+
 
             if action == "schedule":
                 clocked_time = tele.scheduled_time
@@ -117,12 +148,18 @@ def reddit_create(request):
             if image_file:
                 try:
                     result  = upload_image_to_cloudinary(image_file)
+                    reddit.photo=None
                     reddit.photo_url = result
+
+                    
                 except Exception as e:
                     print("❌ Cloudinary upload failed:", e)
 
+                    
+
 
             reddit.save()
+            
 
             if action =="schedule":
                 clocked_time = reddit.scheduled_time
@@ -224,7 +261,28 @@ def telegram_edit(request, telegram_id):
         if form.is_valid():
             tele = form.save(commit=False)
             tele.user = request.user
+
             tele.save()
+            
+
+
+            task_name_prefix = f"schedule_telegram_task_"
+            tasks = PeriodicTask.objects.filter(name__startswith=task_name_prefix)
+
+
+            for task in tasks:
+                args = json.loads(task.args)
+                if tele.id in args:
+                    # Update the existing task's args and clocked time
+                    task.args = json.dumps([tele.BOT_id, tele.chat_id, tele.content,tele.image_url, tele.id])
+
+                    # Update clocked schedule if time was changed
+                    clocked_time = tele.scheduled_time
+                    clocked_schedule, created = ClockedSchedule.objects.get_or_create(clocked_time=clocked_time)
+                    task.clocked = clocked_schedule
+
+                    task.save()
+
             return redirect('user')
 
     else:
@@ -267,7 +325,7 @@ def reddit_edit(request, reddit_id):
                 args = json.loads(task.args)
                 if reddit.id in args:
                     # Update the existing task's args and clocked time
-                    task.args = json.dumps([reddit.user.id, reddit.subreddit_name, reddit.title, reddit.body, reddit.id])
+                    task.args = json.dumps([reddit.user.id, reddit.subreddit_name, reddit.title, reddit.body,reddit.photo_url, reddit.id])
 
                     # Update clocked schedule if time was changed
                     clocked_time = reddit.scheduled_time
@@ -329,7 +387,175 @@ def test_env(request):
 
 
 
+def generate_content(request):
+    """
+    Multi-step content generation view that follows the template structure:
+    Step 1: Content Basics (content_type, topic, audience)
+    Step 2: Style & Requirements (tone, style, keywords)
+    Step 3: Format & Objectives (length, format, objective)
+    """
+    if request.method == 'POST':
+        form = ContentTemplateForm(request.POST)
+        
+        if form.is_valid():
+            content_template = form.save(commit=False)
+            content_template.user = request.user
+            
+            # Build the prompt from the form data
+            prompt = f"""
+Generate {content_template.content_type} content based on the following requirements:
 
+**Topic/Subject:** {content_template.topic}
+
+**Target Audience:** {content_template.audience}
+
+**Tone:** {content_template.tone}
+
+**Writing Style:** {content_template.style or 'Natural and engaging'}
+
+**Keywords to Include:** {content_template.keywords or 'None specified'}
+
+**Desired Length:** {content_template.length}
+
+**Format Requirements:** {content_template.format or 'Standard format'}
+
+**Content Objective:** {content_template.objective}
+
+Please create compelling, well-structured content that meets all these requirements.
+"""
+            
+            print(prompt)
+            
+            # Call Gemini API
+            API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
+            
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ]
+            }
+            
+            # Retry logic with exponential backoff
+            max_retries = 3
+            retry_delay = 2  # Start with 2 seconds
+            
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+                    response.raise_for_status()
+                    data = response.json()
+                    
+                    # Extract generated text
+                    generated_text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    
+                    # Save generated content
+                    content_template.generated_content = generated_text
+                    content_template.save()
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'content': generated_text,
+                        'template_id': content_template.id
+                    })
+                    
+                except requests.exceptions.HTTPError as e:
+                    if response.status_code == 429:  # Rate limit error
+                        if attempt < max_retries - 1:
+                            wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
+                            print(f"Rate limited. Waiting {wait_time} seconds before retry {attempt + 1}/{max_retries}")
+                            time.sleep(wait_time)
+                            continue
+                        else:
+                            return JsonResponse({
+                                'success': False, 
+                                'error': 'API rate limit exceeded. Please wait a few moments and try again.'
+                            }, status=429)
+                    else:
+                        return JsonResponse({'success': False, 'error': f'API Error: {str(e)}'}, status=500)
+                        
+                except requests.exceptions.RequestException as e:
+                    return JsonResponse({'success': False, 'error': f'Request failed: {str(e)}'}, status=500)
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    
+    else:
+        form = ContentTemplateForm()
+        
+    return render(request, 'content_generator.html', {'form': form})
+
+
+@csrf_exempt
+def generate_content_api(request):
+    """
+    API endpoint for generating content via AJAX calls
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            prompt = data.get('prompt')
+            
+            if not prompt:
+                return JsonResponse({'error': 'Prompt is required'}, status=400)
+            
+            API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
+            
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ]
+            }
+            
+            # Retry logic with exponential backoff
+            max_retries = 3
+            retry_delay = 2
+            
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+                    response.raise_for_status()
+                    result = response.json()
+                    
+                    generated_text = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    
+                    return JsonResponse({'success': True, 'content': generated_text})
+                    
+                except requests.exceptions.HTTPError as e:
+                    if response.status_code == 429:  # Rate limit error
+                        if attempt < max_retries - 1:
+                            wait_time = retry_delay * (2 ** attempt)
+                            time.sleep(wait_time)
+                            continue
+                        else:
+                            return JsonResponse({
+                                'error': 'API rate limit exceeded. Please wait a few moments and try again.'
+                            }, status=429)
+                    else:
+                        return JsonResponse({'error': f'API Error: {str(e)}'}, status=500)
+                        
+                except requests.exceptions.RequestException as e:
+                    return JsonResponse({'error': f'Request failed: {str(e)}'}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
 
 
 
