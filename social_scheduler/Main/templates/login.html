@@ -7,7 +7,7 @@
 
   <div class="container mt-5">
   <div class="card shadow text-white  rounded-4" style="max-width: 500px; margin: auto; background-color:rgb(28, 29, 30); color:rgb(153, 193, 233);">
-    <h2 class="text-center pt-4">Register</h2>
+    <h2 class="text-center pt-4">Login</h2>
     <div class="card-body p-4">
       <form method="post">
         {% csrf_token %}
@@ -21,13 +21,12 @@
               {% endif %}
             </div>
           {% endfor %}
-          <button class="btn btn-primary w-100">Register</button>
+          <button class="btn btn-primary w-100">Login</button>
         </div>
       </form>
     </div>
   </div>
 </div>
-
 
 </div>
 

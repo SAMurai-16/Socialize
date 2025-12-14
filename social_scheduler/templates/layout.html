@@ -47,7 +47,6 @@
                 <img src="https://www.svgrepo.com/show/271111/reddit.svg" width="20" alt="Reddit" class="img-fluid">
               </a></li>
 
-              <li><a class="dropdown-item" href="#">Instagram</a></li>
             </ul>
           </li>
 
@@ -68,10 +67,7 @@
         </ul>
 
         <!-- Search Bar -->
-        <form class="d-flex me-3" role="search">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
-          <button class="btn btn-outline-light" type="submit">Search</button>
-        </form>
+
 
         <!-- Auth Buttons -->
         {% if user.is_authenticated %}
@@ -79,7 +75,7 @@
           {% csrf_token %}
         </form>
         {% else %}
-          <a href="{% url 'account_login' %}" class="btn btn-outline-light mx-2">Login</a>
+          <a href="{% url 'login_view' %}" class="btn btn-outline-light mx-2">Login</a>
           <a href="{% url 'register' %}" class="btn btn-primary">Register</a>
         {% endif %}
       </div>

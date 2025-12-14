@@ -19,6 +19,7 @@ REDDIT_CLIENT_SECRET = config("REDDIT_CLIENT_SECRET")
 REDDIT_REDIRECT_URI = config("REDDIT_REDIRECT_URI")
 REDDIT_SCOPES = config("REDDIT_SCOPES")
 REDDIT_STATE = config("REDDIT_STATE")
+GEMINI_API_KEY = config("GEMINI_API_KEY")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -29,13 +30,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-ku14!+x(-@&i^-rfg_1vbimbm*lmiqr^u19rq(jx3)&+f*=gpx"
+# SECRET_KEY = "django-insecure-ku14!+x(-@&i^-rfg_1vbimbm*lmiqr^u19rq(jx3)&+f*=gpx"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
+        
+# CSRF settings for local development
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 
 CSRF_TRUSTED_ORIGINS = [
@@ -174,7 +181,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-LOGIN_URL = '/accounts/login'
+LOGIN_URL = '/schedule/login'
 
 LOGIN_REDIRECT_URL = '/schedule/'
 
@@ -184,13 +191,13 @@ LOGOUT_REDIRECT_URL = '/schedule/'
 # CELERY SETUP
 
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Kolkata'
+accept_content = ['application/json']
+task_serializer = 'json'
+result_serializer = 'json'
+timezone = 'Asia/Kolkata'
 
 
-CELERY_RESULT_BACKEND = 'django-db'
+result_backend = 'django-db'
 
 
 # CELERY BEAT SETTINGS
