@@ -26,6 +26,8 @@ urlpatterns = [
      path('<int:reddit_id>/reddit/view',views.reddit_view, name='reddit_view'),
       path('reddit/connect/', redirect.reddit_auth_start, name='reddit_auth_start'),
       path('reddit/callback/', redirect.reddit_callback, name='reddit_callback'),  
+      path('generate-content/', views.generate_content, name='generate_content'),
+  
 
 
 
